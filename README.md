@@ -434,7 +434,7 @@ MIT License
 
 ---
 
-## Project Links
+## Project credit to
 
 | Platform | URL |
 |----------|-----|
