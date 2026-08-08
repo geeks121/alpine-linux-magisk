@@ -5,7 +5,7 @@
 
 MODDIR="${0%/*}"
 
-# 加载公共函数（修复：添加更多路径尝试）
+# Load common functions (Fixed: add more path attempts)
 if [ -f "$MODDIR/../common.sh" ]; then
     . "$MODDIR/../common.sh"
 elif [ -f "/data/adb/modules/alpine_linux/common.sh" ]; then
@@ -13,70 +13,77 @@ elif [ -f "/data/adb/modules/alpine_linux/common.sh" ]; then
 elif [ -f "/data/adb/modules/alpine-linux-magisk/common.sh" ]; then
     . "/data/adb/modules/alpine-linux-magisk/common.sh"
 else
-    echo "错误: 无法加载 common.sh"
-    echo "请确认模块已正确安装"
+    echo "Error: Cannot load common.sh"
+    echo "Please verify module is installed correctly"
     exit 1
 fi
 
-# 显示帮助
+# Show help
 show_help() {
     cat << EOF
-Alpine Linux 控制工具 v1.3.2
+Alpine Linux Control Tool v1.3.4
 
-用法: alpine <命令> [参数]
+Usage: alpine <command> [args]
 
-容器管理:
-  start                     启动 Alpine Linux
-  stop                      停止 Alpine Linux
-  restart                   重启 Alpine Linux
-  status                    查看运行状态
-  shell                     进入 Alpine Linux shell
-  exec <cmd>                在 Alpine Linux 中执行命令
+Container Management:
+  start                     Start Alpine Linux
+  stop                      Stop Alpine Linux
+  restart                   Restart Alpine Linux
+  status                    View running status
+  shell                     Enter Alpine Linux shell
+  exec <cmd>                Execute command in Alpine Linux
 
-rootfs 管理:
-  download [arch] [ver] [mirror]  自动下载并安装 rootfs
-  install <file>            从本地文件安装 rootfs
-  mirror <name>             设置 APK 镜像源 (tuna/ustc/official)
+rootfs Management:
+  download [arch] [ver] [mirror]  Auto download and install rootfs
+  install <file>            Install rootfs from local file
+  mirror <name>             Set APK mirror (tuna/ustc/official)
 
-软件安装:
-  install-pkg [basic|dev|net|tools|all]  安装软件包
-  install-hermes            一键安装 Hermes Agent
+Mirrors:
+  tuna     https://mirrors.tuna.tsinghua.edu.cn/alpine (default, fast Asia)
+  ustc     https://mirrors.ustc.edu.cn/alpine (fast China)
+  official https://dl-cdn.alpinelinux.org/alpine (official CDN)
 
-服务管理:
-  service add <名称> [命令]   创建服务并启用自启
-  service list                列出所有服务
-  service start <名称>        启动服务
-  service stop <名称>         停止服务
-  service status <名称>       查看状态
-  service enable <名称>       启用开机自启
-  service disable <名称>      禁用开机自启
-  service logs <名称>         查看日志
-  service rm <名称>           删除服务
+Package Installation:
+  install-pkg [basic|dev|net|tools|all]  Install packages
+  install-hermes            One-click install Hermes Agent
 
-SSH 服务:
-  ssh [端口] [密码]           一键配置 SSH
-  ssh start|stop|restart|status  管理 SSH
+Service Management:
+  service add <name> [cmd]  Create service and enable auto-start
+  service list              List all services
+  service start <name>      Start service
+  service stop <name>       Stop service
+  service status <name>     View status
+  service enable <name>     Enable auto-start
+  service disable <name>    Disable auto-start
+  service logs <name>       View logs
+  service rm <name>         Remove service
 
-模块管理:
-  module-upgrade [zip]       升级模块
-  module-version             查看模块版本
+SSH Service:
+  ssh [port] [password]     One-click configure SSH
+  ssh start|stop|restart|status  Manage SSH
 
-其他:
-  log                        查看日志
-  help                       显示帮助
+Module Management:
+  module-upgrade [zip]      Upgrade module
+  module-version            View module version
 
-示例:
+Other:
+  log                       View logs
+  help                      Show help
+
+Examples:
   alpine download
+  alpine download aarch64 3.20.3 tuna
+  alpine download aarch64 3.20.3 official
   alpine start
   alpine install-hermes
   alpine service add hermes
   alpine shell
 
-ROOTFS 路径: $RF
+ROOTFS PATH: \$RF
 EOF
 }
 
-# 主逻辑
+# Main logic
 case "$1" in
     start) alpine_start ;;
     stop) alpine_stop ;;
@@ -92,8 +99,8 @@ case "$1" in
     ssh) shift; alpine_ssh "$@" ;;
     mirror) shift; alpine_set_mirror "$@" ;;
     module-upgrade) shift; alpine_update "$@" ;;
-    module-version) cat /data/adb/modules/alpine_linux/module.prop 2>/dev/null || cat /data/adb/modules/alpine-linux-magisk/module.prop 2>/dev/null || echo "模块未安装" ;;
-    log) [ -f "$LOG" ] && tail -n 50 "$LOG" || echo "日志文件不存在" ;;
+    module-version) cat /data/adb/modules/alpine_linux/module.prop 2>/dev/null || cat /data/adb/modules/alpine-linux-magisk/module.prop 2>/dev/null || echo "Module not installed" ;;
+    log) [ -f "$LOG" ] && tail -n 50 "$LOG" || echo "Log file not found" ;;
     help|--help|-h|"") show_help ;;
-    *) err "未知命令: $1"; show_help; exit 1 ;;
+    *) err "Unknown command: $1"; show_help; exit 1 ;;
 esac
