@@ -1,6 +1,6 @@
 id=alpine_linux
 name=Alpine Linux
 version=v1.3.4
-versionCode=134
-author=chuanglong
-description=在 Android 设备上以 chroot 方式运行 Alpine Linux。功能：自动下载rootfs、服务管理、一键配置SSH、开机自启。GitHub: https://github.com/chuanglizhe/alpine-linux-magisk Gitee: https://gitee.com/chuanglizhe1/alpine-linux-magisk
+versionCode=135
+author=Mod zapber (credit to chuanglong)
+description=Run Alpine Linux via chroot on Android. Features: auto rootfs download, service management, one-click SSH config, boot auto-start. Supports Magisk, KernelSU, APatch. GitHub: https://github.com/geeks121/alpine-linux-magisk  .
