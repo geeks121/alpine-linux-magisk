@@ -2,7 +2,7 @@
 
 Run Alpine Linux via chroot on Android devices with this Magisk module.
 
-**Version: v1.3.4**
+**Version: v0.0.1**
 
 ---
 
