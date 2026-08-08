@@ -6,7 +6,7 @@
 MODDIR="${0%/*}"
 . "$MODDIR/common.sh"
 
-# 等待系统启动完成
+# Wait for boot complete
 wait_for_boot() {
     until [ "$(getprop sys.boot_completed)" = "1" ]; do
         sleep 1
@@ -14,29 +14,29 @@ wait_for_boot() {
     sleep 5
 }
 
-# 主函数
+# Main function
 main() {
     inf "========================================"
     inf " Alpine Linux Service Starting"
     inf "========================================"
 
-    # 检查 rootfs
+    # Check rootfs
     if ! ck; then
-        wrn "rootfs 未安装，跳过自动启动"
-        inf "请使用 'alpine download' 安装"
+        wrn "rootfs not installed, skipping auto-start"
+        inf "Use 'alpine download' to install"
         exit 0
     fi
 
-    # 启动 Alpine（已包含自动启动服务）
+    # Start Alpine (includes auto-start services)
     alpine_start
 
-    # 检查启动结果
+    # Check start result
     if run; then
-        inf "Alpine Linux 已在后台运行"
+        inf "Alpine Linux running in background"
     else
-        err "Alpine Linux 启动失败"
+        err "Alpine Linux start failed"
     fi
 }
 
-# 后台执行
+# Background execution
 wait_for_boot && main &
