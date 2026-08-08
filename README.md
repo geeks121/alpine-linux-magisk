@@ -1,46 +1,46 @@
-# Alpine Linux - Magisk 模块
+# Alpine Linux - Magisk Module
 
-在 Android 设备上以 chroot 方式运行 Alpine Linux 的 Magisk 模块。
+Run Alpine Linux via chroot on Android devices with this Magisk module.
 
-**版本：v1.3.4**
-
----
-
-## 功能特性
-
-- ✅ 自动下载 rootfs，自动检测架构
-- ✅ 服务管理，统一使用 `service` 命令
-- ✅ 预设常用应用，一键添加服务
-- ✅ 开机自启动
-- ✅ 一键配置 SSH
-- ✅ 存储挂载（内部存储、外置SD卡）
-- ✅ 多镜像源支持（清华、中科大、官方）
+**Version: v1.3.4**
 
 ---
 
-## 系统要求
+## Features
 
-| 项目 | 要求 |
-|------|------|
+- ✅ Auto-download rootfs, auto-detect architecture
+- ✅ Service management, unified `service` command
+- ✅ Pre-configured common apps, one-click service add
+- ✅ Auto-start on boot
+- ✅ One-click SSH configuration
+- ✅ Storage mounting (internal storage, external SD card)
+- ✅ Multiple mirror sources (TUNA, USTC, Official)
+
+---
+
+## Requirements
+
+| Item | Requirement |
+|------|-------------|
 | Android | 5.0+ |
 | Magisk | v20.4+ |
-| 权限 | root |
-| 空间 | 约 100MB |
+| Permission | root |
+| Space | ~100MB |
 
 ---
 
-## 安装方法
+## Installation
 
-### 方法一：直接安装（推荐）
+### Method 1: Direct Install (Recommended)
 
-1. 将 `alpine-linux` 目录打包为 zip
-2. Magisk Manager → 模块 → 从本地安装
-3. 重启设备
+1. Package `alpine-linux` directory as zip
+2. Magisk Manager → Modules → Install from local storage
+3. Reboot device
 
-### 方法二：手动复制
+### Method 2: Manual Copy
 
 ```bash
-# 在设备上执行
+# On device
 cp -r alpine-linux/* /data/adb/modules/alpine_linux/
 chmod +x /data/adb/modules/alpine_linux/*.sh
 chmod +x /data/adb/modules/alpine_linux/system/bin/alpine
@@ -49,401 +49,401 @@ reboot
 
 ---
 
-## 快速开始
+## Quick Start
 
 ```bash
-# 下载并安装 rootfs
+# Download and install rootfs
 alpine download
 
-# 启动 Alpine Linux
+# Start Alpine Linux
 alpine start
 
-# 进入 shell
+# Enter shell
 alpine shell
 
-# 查看状态
+# Check status
 alpine status
 ```
 
 ---
 
-## 完整命令参考
+## Complete Command Reference
 
-### 容器管理
+### Container Management
 
-| 命令 | 说明 |
-|------|------|
-| `alpine start` | 启动 Alpine |
-| `alpine stop` | 停止 Alpine |
-| `alpine restart` | 重启 Alpine |
-| `alpine status` | 查看状态 |
-| `alpine shell` | 进入 shell |
-| `alpine exec <命令>` | 执行命令 |
+| Command | Description |
+|---------|-------------|
+| `alpine start` | Start Alpine |
+| `alpine stop` | Stop Alpine |
+| `alpine restart` | Restart Alpine |
+| `alpine status` | Check status |
+| `alpine shell` | Enter shell |
+| `alpine exec <cmd>` | Execute command |
 
-### rootfs 管理
+### Rootfs Management
 
-| 命令 | 说明 |
-|------|------|
-| `alpine download` | 自动下载安装（自动检测架构） |
-| `alpine download aarch64` | 指定架构下载 |
-| `alpine download aarch64 3.19.0` | 指定架构和版本 |
-| `alpine download aarch64 3.19.0 tuna` | 指定镜像源 |
-| `alpine install <文件>` | 从本地 tar.gz 文件安装 |
-| `alpine mirror tuna` | 设置镜像源 |
+| Command | Description |
+|---------|-------------|
+| `alpine download` | Auto-download install (auto-detect arch) |
+| `alpine download aarch64` | Download for specific arch |
+| `alpine download aarch64 3.19.0` | Specify arch and version |
+| `alpine download aarch64 3.19.0 tuna` | Specify mirror source |
+| `alpine install <file>` | Install from local tar.gz |
+| `alpine mirror tuna` | Set mirror source |
 
-**镜像源选项：**
+**Mirror Options:**
 
-| 名称 | 地址 |
-|------|------|
-| `tuna` | 清华大学（默认，国内推荐） |
-| `ustc` | 中科大 |
-| `official` | 官方源 |
+| Name | Address |
+|------|---------|
+| `tuna` | Tsinghua University (default, recommended for China) |
+| `ustc` | University of Science and Technology of China |
+| `official` | Official source |
 
-### 服务管理
+### Service Management
 
-| 命令 | 说明 |
-|------|------|
-| `alpine service add <名称>` | 添加预设服务 |
-| `alpine service add <名称> "命令"` | 添加自定义服务 |
-| `alpine service list` | 查看服务列表 |
-| `alpine service start <名称>` | 启动服务 |
-| `alpine service stop <名称>` | 停止服务 |
-| `alpine service restart <名称>` | 重启服务 |
-| `alpine service status <名称>` | 查看状态 |
-| `alpine service enable <名称>` | 启用开机自启 |
-| `alpine service disable <名称>` | 禁用开机自启 |
-| `alpine service logs <名称>` | 查看日志 |
-| `alpine service rm <名称>` | 删除服务 |
+| Command | Description |
+|---------|-------------|
+| `alpine service add <name>` | Add preset service |
+| `alpine service add <name> "cmd"` | Add custom service |
+| `alpine service list` | List services |
+| `alpine service start <name>` | Start service |
+| `alpine service stop <name>` | Stop service |
+| `alpine service restart <name>` | Restart service |
+| `alpine service status <name>` | Check service status |
+| `alpine service enable <name>` | Enable auto-start on boot |
+| `alpine service disable <name>` | Disable auto-start |
+| `alpine service logs <name>` | View logs |
+| `alpine service rm <name>` | Remove service |
 
-**预设应用：**
+**Preset Apps:**
 
-添加预设应用时会自动配置启动命令，无需手动指定：
+Adding a preset app auto-configures the startup command — no manual specification needed:
 
-| 预设名 | 说明 | 自动启动命令 | 需先安装 |
-|--------|------|--------------|----------|
-| `openclaw` | OpenClaw 网关 | `openclaw gateway --port 18789` | `npm i -g openclaw` |
-| `hermes` | Hermes Agent 网关 | `hermes gateway` | `alpine install-hermes` |
-| `sshd` | SSH 服务 | `/usr/sbin/sshd` | `alpine ssh` 自动安装 |
-| `nginx` | Web 服务器 | `nginx` | `apk add nginx` |
-| `redis` | 内存数据库 | `redis-server` | `apk add redis` |
-| `mysql` | 关系型数据库 | `mysqld` | `apk add mysql` |
-| `postgres` | 关系型数据库 | `postgres` | `apk add postgresql` |
+| Preset | Description | Auto-start Command | Must Install First |
+|--------|-------------|-------------------|-------------------|
+| `openclaw` | OpenClaw Gateway | `openclaw gateway --port 18789` | `npm i -g openclaw` |
+| `hermes` | Hermes Agent Gateway | `hermes gateway` | `alpine install-hermes` |
+| `sshd` | SSH Service | `/usr/sbin/sshd` | `alpine ssh` auto-installs |
+| `nginx` | Web Server | `nginx` | `apk add nginx` |
+| `redis` | In-memory DB | `redis-server` | `apk add redis` |
+| `mysql` | Relational DB | `mysqld` | `apk add mysql` |
+| `postgres` | Relational DB | `postgres` | `apk add postgresql` |
 
-> ⚠️ **注意**：预设应用只是配置了启动命令，需要先安装对应的软件包才能运行。
+> ⚠️ **Note**: Preset apps only configure startup commands — you must install the corresponding packages first.
 
-**使用示例：**
+**Usage Example:**
 
 ```bash
-# 以 nginx 为例
+# Using nginx as example
 alpine shell
-# 在 shell 内安装 nginx
+# In shell, install nginx
 apk add nginx
 exit
 
-# 添加预设服务（自动配置启动命令）
+# Add preset service (auto-configures startup command)
 alpine service add nginx
 
-# 启动服务
+# Start service
 alpine service start nginx
 
-# 查看状态
+# Check status
 alpine service status nginx
 ```
 
-**自定义服务：**
+**Custom Service:**
 
-如果预设不满足需求，可以指定自定义启动命令：
+If presets don't meet needs, specify custom startup command:
 
 ```bash
-# 自定义启动命令
+# Custom startup command
 alpine service add myapp "/usr/local/bin/myapp --port 8080"
 alpine service start myapp
 ```
 
-### SSH 配置
+### SSH Configuration
 
-| 命令 | 说明 |
-|------|------|
-| `alpine ssh` | 一键配置 SSH（端口22，密码123456） |
-| `alpine ssh 22 mypassword` | 指定端口和密码 |
-| `alpine ssh start` | 启动 SSH |
-| `alpine ssh stop` | 停止 SSH |
-| `alpine ssh restart` | 重启 SSH |
-| `alpine ssh status` | 查看状态 |
+| Command | Description |
+|---------|-------------|
+| `alpine ssh` | One-click SSH config (port 22, password 123456) |
+| `alpine ssh 22 mypassword` | Specify port and password |
+| `alpine ssh start` | Start SSH |
+| `alpine ssh stop` | Stop SSH |
+| `alpine ssh restart` | Restart SSH |
+| `alpine ssh status` | Check status |
 
-> ⚠️ **安全提示**：默认密码 `123456` 仅供测试，生产环境请务必修改！
+> ⚠️ **Security**: Default password `123456` is for testing only — change it in production!
 
-### 软件安装
+### Package Installation
 
-| 命令 | 说明 |
-|------|------|
-| `alpine install-pkg` | 安装基础工具 |
-| `alpine install-pkg dev` | 安装开发环境 |
-| `alpine install-pkg net` | 安装网络工具 |
-| `alpine install-pkg tools` | 安装常用工具 |
-| `alpine install-pkg all` | 安装全部软件 |
-| `alpine install-pkg <包名>` | 安装指定软件包 |
+| Command | Description |
+|---------|-------------|
+| `alpine install-pkg` | Install basic tools |
+| `alpine install-pkg dev` | Install dev environment |
+| `alpine install-pkg net` | Install network tools |
+| `alpine install-pkg tools` | Install common tools |
+| `alpine install-pkg all` | Install all packages |
+| `alpine install-pkg <pkg>` | Install specific package |
 
-#### 基础工具 (basic)
+#### Basic Tools
 
-| 软件包 | 说明 |
-|--------|------|
-| `bash` | Bourne Again Shell，更强大的命令行 shell |
-| `coreutils` | GNU 核心工具集（ls, cp, mv, cat 等） |
-| `vim` | 经典文本编辑器 |
-| `curl` | 命令行数据传输工具 |
-| `wget` | 文件下载工具 |
-
-#### 开发环境 (dev)
-
-| 软件包 | 说明 |
-|--------|------|
+| Package | Description |
+|---------|-------------|
 | `bash` | Bourne Again Shell |
-| `vim` | 文本编辑器 |
-| `curl` | 数据传输工具 |
-| `git` | 分布式版本控制系统 |
-| `python3` | Python 3 解释器 |
-| `nodejs` | Node.js JavaScript 运行环境 |
-| `gcc` | GNU C 编译器 |
+| `coreutils` | GNU core utilities (ls, cp, mv, cat, etc.) |
+| `vim` | Classic text editor |
+| `curl` | CLI data transfer tool |
+| `wget` | File download tool |
 
-#### 网络工具 (net)
+#### Dev Environment
 
-| 软件包 | 说明 |
-|--------|------|
+| Package | Description |
+|---------|-------------|
 | `bash` | Bourne Again Shell |
-| `vim` | 文本编辑器 |
-| `curl` | 数据传输工具 |
-| `openssh` | OpenSSH 客户端和服务端 |
-| `openssl` | SSL/TLS 加密工具库 |
+| `vim` | Text editor |
+| `curl` | Data transfer tool |
+| `git` | Distributed version control |
+| `python3` | Python 3 interpreter |
+| `nodejs` | Node.js JavaScript runtime |
+| `gcc` | GNU C compiler |
 
-#### 常用工具 (tools)
+#### Network Tools
 
-| 软件包 | 说明 |
-|--------|------|
+| Package | Description |
+|---------|-------------|
 | `bash` | Bourne Again Shell |
-| `vim` | 文本编辑器 |
-| `curl` | 数据传输工具 |
-| `htop` | 交互式进程查看器 |
-| `tree` | 目录树显示工具 |
-| `rsync` | 文件同步工具 |
+| `vim` | Text editor |
+| `curl` | Data transfer tool |
+| `openssh` | OpenSSH client & server |
+| `openssl` | SSL/TLS crypto toolkit |
 
-#### 全部软件 (all)
+#### Common Tools
 
-包含以上所有软件包，共 12 个：`bash`, `coreutils`, `vim`, `curl`, `wget`, `git`, `python3`, `nodejs`, `gcc`, `openssh`, `htop`, `tree`, `rsync`
+| Package | Description |
+|---------|-------------|
+| `bash` | Bourne Again Shell |
+| `vim` | Text editor |
+| `curl` | Data transfer tool |
+| `htop` | Interactive process viewer |
+| `tree` | Directory tree display |
+| `rsync` | File sync tool |
 
-#### 包管理器镜像配置
+#### All Packages
 
-安装 `python3` 或 `nodejs` 时，会自动配置国内镜像源：
+Contains all above — 13 total: `bash`, `coreutils`, `vim`, `curl`, `wget`, `git`, `python3`, `nodejs`, `gcc`, `openssh`, `htop`, `tree`, `rsync`
 
-| 语言 | 包管理器 | 镜像源 |
-|------|----------|--------|
-| Python | pip | 清华大学 pypi.tuna.tsinghua.edu.cn |
+#### Package Manager Mirror Config
+
+When installing `python3` or `nodejs`, domestic mirrors auto-configure:
+
+| Language | Package Manager | Mirror |
+|----------|-----------------|--------|
+| Python | pip | TUNA pypi.tuna.tsinghua.edu.cn |
 | Node.js | npm | npmmirror.com |
 
-> 💡 **提示**：Python 的 pip 在 Alpine Linux 中需要单独安装，`install-pkg` 会自动处理。
+> 💡 **Tip**: Python pip needs separate install on Alpine — `install-pkg` handles this.
 
-#### 自定义安装
+#### Custom Install
 
 ```bash
-# 安装单个软件包
+# Install single package
 alpine install-pkg nginx
 
-# 安装多个软件包（需要进入 shell）
+# Install multiple packages (enter shell)
 alpine shell
 apk add nginx redis mysql
 ```
 
-### 其他命令
+### Other Commands
 
-| 命令 | 说明 |
-|------|------|
-| `alpine log` | 查看最近日志 |
-| `alpine module-version` | 查看模块版本 |
-| `alpine module-upgrade <zip>` | 升级模块 |
-| `alpine help` | 显示帮助 |
+| Command | Description |
+|---------|-------------|
+| `alpine log` | View recent logs |
+| `alpine module-version` | View module version |
+| `alpine module-upgrade <zip>` | Upgrade module |
+| `alpine help` | Show help |
 
-### 一键安装 Hermes Agent
+### One-Click Hermes Agent Install
 
 ```bash
 alpine install-hermes
 ```
 
-一键安装 [Hermes Agent](https://github.com/NousResearch/hermes-agent)（Nous Research 开源 AI 代理），自动完成：
+One-click install [Hermes Agent](https://github.com/NousResearch/hermes-agent) (Nous Research open-source AI agent), auto-completes:
 
-| 步骤 | 说明 |
-|------|------|
-| 系统依赖 | python3, nodejs, npm, git, gcc, ripgrep 等 |
-| 包管理器镜像 | pip 清华源 + npm 淘宝源 |
-| 下载源码 | 自动选择最快下载方式 |
-| Python 虚拟环境 | 创建 venv 并安装依赖 |
-| Node.js 依赖 | 安装浏览器工具依赖 |
-| 命令配置 | 创建 `hermes` 命令链接 |
-| 配置初始化 | 创建 `.env`、`config.yaml` 等配置文件 |
+| Step | Description |
+|------|-------------|
+| System deps | python3, nodejs, npm, git, gcc, ripgrep, etc. |
+| Package mirrors | pip TUNA + npm Taobao |
+| Source download | Auto-select fastest method |
+| Python venv | Create venv & install deps |
+| Node.js deps | Install browser tool deps |
+| Command config | Create `hermes` command link |
+| Config init | Create `.env`, `config.yaml`, etc. |
 
-#### 下载加速
+#### Download Acceleration
 
-由于国内访问 GitHub 不稳定，安装时自动按以下顺序尝试下载：
+Due to unstable GitHub access in China, install tries in order:
 
-| 优先级 | 方案 | 说明 |
-|--------|------|------|
-| 1 | Gitee 用户镜像 | 从用户 Gitee 账号下的镜像克隆 |
-| 2 | Gitee 自动创建镜像 | 交互输入账号，自动创建 Gitee 镜像仓库 |
-| 3 | GitHub 压缩包 | codeload 下载，体积小 |
-| 4 | git clone --depth 1 | 浅克隆兜底 |
+| Priority | Method | Description |
+|----------|--------|-------------|
+| 1 | Gitee user mirror | Clone from user's Gitee mirror |
+| 2 | Gitee auto-create mirror | Interactive input account, auto-create Gitee mirror repo |
+| 3 | GitHub tarball | codeload download, small size |
+| 4 | `git clone --depth 1` | Shallow clone fallback |
 
-首次安装时，如果 Gitee 未配置，会自动询问：
+First install prompts if Gitee not configured:
 
 ```
-是否配置 Gitee？[Y/n] y
-请输入 Gitee 用户名: chuanglizhe1
-请输入 Gitee 私人令牌: xxxxxxxx
+Configure Gitee? [Y/n] y
+Enter Gitee username: chuanglizhe1
+Enter Gitee token: xxxxxxxx
 ```
 
-> 💡 **提示**：Gitee 令牌在 Gitee → 设置 → 私人令牌 中生成，勾选 `projects` 权限。配置后模块会自动在 Gitee 创建私有镜像仓库并从 GitHub 同步，后续下载走 Gitee 国内线路。
+> 💡 **Tip**: Generate Gitee token at Gitee → Settings → Personal Tokens, check `projects` permission. After config, module auto-creates private Gitee mirror repo synced from GitHub — future downloads use Gitee domestic lines.
 
-#### 安装完成后
+#### After Install
 
 ```bash
 alpine shell
 
-# 配置 API 密钥
+# Configure API keys
 hermes setup
 
-# 开始对话
+# Start chat
 hermes
 
-# 添加为服务（开机自启）
+# Add as service (auto-start)
 exit
 alpine service add hermes
 alpine service start hermes
 ```
 
-> ⚠️ **注意**：安装过程需要联网，Python 依赖编译可能需要几分钟。
+> ⚠️ **Note**: Install requires internet; Python dependency compilation may take several minutes.
 
 ---
 
-## 使用示例
+## Usage Examples
 
-### 示例 1：运行 Web 服务器
+### Example 1: Run Web Server
 
 ```bash
-# 安装 nginx
+# Install nginx
 alpine start
 alpine shell
-# 在 shell 内执行：
+# In shell:
 apk add nginx
 echo "Hello from Alpine!" > /var/www/localhost/htdocs/index.html
 nginx
 
-# 或添加为服务
+# Or add as service
 exit
 alpine service add nginx
 alpine service start nginx
 ```
 
-### 示例 2：添加自定义服务
+### Example 2: Add Custom Service
 
 ```bash
-# 添加 Python HTTP 服务
+# Add Python HTTP server
 alpine service add pyserver "python3 -m http.server 8080 --directory /root/web"
 alpine service start pyserver
 alpine service status pyserver
 ```
 
-### 示例 3：SSH 远程连接
+### Example 3: SSH Remote Access
 
 ```bash
-# 配置 SSH（修改默认密码！）
+# Configure SSH (change default password!)
 alpine ssh 2222 my_secure_password
 
-# 从电脑连接
-ssh root@<手机IP> -p 2222
+# Connect from PC
+ssh root@<phone-IP> -p 2222
 ```
 
 ---
 
-## 目录结构
+## Directory Structure
 
-### Android 端
+### Android Side
 
-| 路径 | 说明 |
-|------|------|
-| `/data/alpine_linux/rootfs` | Alpine rootfs 根文件系统 |
-| `/data/alpine_linux/services` | 服务配置文件目录 |
-| `/data/alpine_linux/alpine.log` | 运行日志 |
+| Path | Description |
+|------|-------------|
+| `/data/alpine_linux/rootfs` | Alpine rootfs |
+| `/data/alpine_linux/services` | Service config directory |
+| `/data/alpine_linux/alpine.log` | Runtime log |
 
-### Alpine 内部
+### Inside Alpine
 
-| 路径 | 说明 |
-|------|------|
-| `/mnt/sdcard` | Android 内部存储 |
-| `/mnt/external_sd` | 外置 SD 卡 |
-| `/var/log/<服务名>.log` | 服务日志 |
+| Path | Description |
+|------|-------------|
+| `/mnt/sdcard` | Android internal storage |
+| `/mnt/external_sd` | External SD card |
+| `/var/log/<service>.log` | Service logs |
 
 ---
 
-## 常见问题
+## FAQ
 
-### Q: 提示 `rootfs 不存在`？
+### Q: "rootfs not found"?
 
 ```bash
 alpine download
 alpine start
 ```
 
-### Q: 提示 `无法检测最新版本`？
+### Q: "Cannot detect latest version"?
 
-手动指定版本：
+Manually specify version:
 ```bash
 alpine download aarch64 3.19.0
 ```
 
-### Q: 如何完全卸载？
+### Q: How to fully uninstall?
 
 ```bash
-# 卸载模块（保留 rootfs）
+# Uninstall module (keep rootfs)
 alpine stop
-# 在 Magisk Manager 中移除模块
+# Remove module in Magisk Manager
 
-# 完全清理（包括 rootfs）
+# Full cleanup (including rootfs)
 rm -rf /data/alpine_linux
 ```
 
-### Q: 如何查看日志？
+### Q: How to view logs?
 
 ```bash
-# 查看最近日志
+# Recent logs
 alpine log
 
-# 完整日志文件
+# Full log file
 cat /data/alpine_linux/alpine.log
 ```
 
-### Q: 服务无法启动？
+### Q: Service won't start?
 
-检查服务日志：
+Check service logs:
 ```bash
-alpine service logs <服务名>
+alpine service logs <service-name>
 ```
 
 ---
 
-## 许可证
+## License
 
 MIT License
 
 ---
 
-## 项目地址
+## Project Links
 
-| 平台 | 地址 |
-|------|------|
+| Platform | URL |
+|----------|-----|
 | GitHub | https://github.com/chuanglizhe/alpine-linux-magisk |
 | Gitee | https://gitee.com/chuanglizhe1/alpine-linux-magisk |
 
 ---
 
-## 致谢
+## Credits
 
-- Alpine Linux：https://alpinelinux.org
-- Magisk：https://github.com/topjohnwu/Magisk
+- Alpine Linux: https://alpinelinux.org
+- Magisk: https://github.com/topjohnwu/Magisk
