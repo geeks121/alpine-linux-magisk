@@ -2,7 +2,7 @@
 # Alpine Linux - Common Functions Library v1.3.4
 
 #=======================================
-# 路径配置
+# Path Configuration
 #=======================================
 R="/data/alpine_linux"
 RF="$R/rootfs"
@@ -10,12 +10,12 @@ SVC="$R/services"
 LOG="$R/alpine.log"
 
 #=======================================
-# 公共环境变量
+# Common Environment Variables
 #=======================================
 CHROOT_ENV="HOME=/root PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin TERM=xterm-256color LANG=C.UTF-8"
 
 #=======================================
-# 颜色和日志
+# Colors and Logging
 #=======================================
 Rd='\033[0;31m'; Gr='\033[0;32m'; Yw='\033[1;33m'; Nc='\033[0m'
 log() {
@@ -33,7 +33,7 @@ wrn() { log WARN "$1"; }
 inf() { log INFO "$1"; }
 
 #=======================================
-# rootfs 检查
+# rootfs Check
 #=======================================
 ck() {
     [ -d "$RF" ] || return 1
@@ -44,17 +44,17 @@ ck() {
 }
 
 #=======================================
-# 运行状态
+# Runtime Status
 #=======================================
 run() {
     mountpoint -q "$RF/proc" 2>/dev/null
 }
 
 #=======================================
-# 挂载管理
+# Mount Management
 #=======================================
 mnt() {
-    inf "挂载..."
+    inf "Mounting..."
     mount -t proc proc "$RF/proc" 2>/dev/null
     mount -t sysfs sysfs "$RF/sys" 2>/dev/null
     mount --bind /dev "$RF/dev" 2>/dev/null
@@ -65,17 +65,17 @@ mnt() {
 }
 
 umnt() {
-    inf "卸载..."
+    inf "Unmounting..."
     for m in run tmp dev/pts dev sys proc; do
         mountpoint -q "$RF/$m" 2>/dev/null && umount -l "$RF/$m" 2>/dev/null
     done
 }
 
 #=======================================
-# 网络配置
+# Network Configuration
 #=======================================
 net() {
-    inf "配置网络..."
+    inf "Configuring network..."
     cp /system/etc/resolv.conf "$RF/etc/resolv.conf" 2>/dev/null || \
         cp /etc/resolv.conf "$RF/etc/resolv.conf" 2>/dev/null || \
         echo -e "nameserver 8.8.8.8\nnameserver 8.8.4.4" > "$RF/etc/resolv.conf"
@@ -84,10 +84,10 @@ net() {
 }
 
 #=======================================
-# 存储挂载（修复：移除Android系统目录挂载）
+# Storage Mount (Fixed: Remove Android system directory mount)
 #=======================================
 smnt() {
-    inf "挂载存储..."
+    inf "Mounting storage..."
     mkdir -p "$RF/mnt/sdcard" "$RF/mnt/external_sd"
     [ -d /sdcard ] && mount --bind /sdcard "$RF/mnt/sdcard" 2>/dev/null
     local sd=""; [ -d /storage/external_SD ] && sd="/storage/external_SD"; [ -d /external_sd ] && sd="/external_sd"
@@ -102,44 +102,44 @@ sumnt() {
 }
 
 #=======================================
-# 容器启动/停止（修复：完善错误处理）
+# Container Start/Stop (Fixed: Improve error handling)
 #=======================================
 alpine_start() {
-    ck || { err "rootfs 不存在"; inf "请先运行: alpine download"; return 1; }
-    run && { wrn "已在运行"; return 0; }
-    inf "启动 Alpine Linux..."
+    ck || { err "rootfs not found"; inf "Please run: alpine download first"; return 1; }
+    run && { wrn "Already running"; return 0; }
+    inf "Starting Alpine Linux..."
     mkdir -p "$R" && chmod 755 "$R" "$RF"
-    mnt || { err "挂载失败"; return 1; }
-    net || { umnt; err "网络配置失败"; return 1; }
+    mnt || { err "Mount failed"; return 1; }
+    net || { umnt; err "Network config failed"; return 1; }
     smnt
-    inf "启动完成"
+    inf "Start complete"
     alpine_service_start_all
 }
 
 alpine_stop() {
-    run || { wrn "未运行"; return 0; }
-    inf "停止 Alpine Linux..."
-    inf "终止进程..."
-    # 终止所有以 rootfs 为根目录的进程
+    run || { wrn "Not running"; return 0; }
+    inf "Stopping Alpine Linux..."
+    inf "Terminating processes..."
+    # Terminate all processes with rootfs as root
     local rf_path=$(echo "$RF" | sed 's#/$##')
     for pid in $(ls /proc 2>/dev/null | grep -E '^[0-9]+$'); do
         [ -L "/proc/$pid/root" ] || continue
         local root=$(readlink "/proc/$pid/root" 2>/dev/null | sed 's#/$##')
         [ "$root" = "$rf_path" ] && kill -9 "$pid" 2>/dev/null
     done
-    # 再用 fuser 确保清理干净
+    # Use fuser to ensure cleanup
     fuser -k "$RF" 2>/dev/null
     fuser -k "$RF"/mnt/* 2>/dev/null
     sleep 1
     sumnt; umnt
-    inf "已停止"
+    inf "Stopped"
 }
 
 #=======================================
-# 执行命令（修复：使用公共环境变量）
+# Execute Command (Fixed: Use common environment variables)
 #=======================================
 alpine_exec() {
-    ck || { err "rootfs 不存在"; return 1; }
+    ck || { err "rootfs not found"; return 1; }
     if [ -z "$1" ]; then
         chroot "$RF" /bin/sh -c "export $CHROOT_ENV; exec /bin/sh"
     else
@@ -148,24 +148,24 @@ alpine_exec() {
 }
 
 #=======================================
-# 状态查看
+# Status View
 #=======================================
 alpine_status() {
     echo "========================================"
-    echo " Alpine Linux 状态"
+    echo " Alpine Linux Status"
     echo "========================================"
-    run && echo -e "状态: ${Gr}运行中${Nc}" || echo -e "状态: ${Rd}已停止${Nc}"
-    echo "路径: $RF"
-    ck && echo -e "ROOTFS: ${Gr}已安装${Nc}" || echo -e "ROOTFS: ${Rd}未安装${Nc}"
-    echo -e "\n挂载点:"
+    run && echo -e "Status: ${Gr}Running${Nc}" || echo -e "Status: ${Rd}Stopped${Nc}"
+    echo "Path: $RF"
+    ck && echo -e "\nROOTFS: ${Gr}Installed${Nc}" || echo -e "\nROOTFS: ${Rd}Not installed${Nc}"
+    echo -e "\nMount points:"
     for m in proc sys dev tmp run; do
-        mountpoint -q "$RF/$m" 2>/dev/null && echo -e "  /$m: ${Gr}已挂载${Nc}" || echo -e "  /$m: ${Rd}未挂载${Nc}"
+        mountpoint -q "$RF/$m" 2>/dev/null && echo -e "  /$m: ${Gr}Mounted${Nc}" || echo -e "  /$m: ${Rd}Not mounted${Nc}"
     done
     echo "========================================"
 }
 
 #=======================================
-# 架构检测（修复：未知架构报错）
+# Architecture Detection (Fixed: Unknown arch error)
 #=======================================
 arch() {
     local a=$(uname -m 2>/dev/null); [ -z "$a" ] && a=$(getprop ro.product.cpu.abi 2>/dev/null)
@@ -175,12 +175,12 @@ arch() {
         arm*|armeabi) echo "armhf" ;;
         x86_64|amd64) echo "x86_64" ;;
         x86|i686) echo "x86" ;;
-        *) err "未知架构: $a"; return 1 ;;
+        *) err "Unknown arch: $a"; return 1 ;;
     esac
 }
 
 #=======================================
-# 镜像源
+# Mirror Sources
 #=======================================
 murl() {
     case "$1" in
@@ -190,58 +190,78 @@ murl() {
     esac
 }
 
+# Default mirror for download (can be overridden by 3rd arg)
+default_mirror() {
+    echo "official"
+}
+
 #=======================================
-# rootfs 下载/安装（修复：移除硬编码版本，必须检测）
+# rootfs Download/Install (Fixed: Remove hardcoded version, must detect)
 #=======================================
 alpine_download() {
-    local a="$1" v="$2" m="${3:-tuna}"
-    [ -z "$a" ] || [ "$a" = "auto" ] && { a=$(arch) || return 1; inf "架构: $a"; }
-    case "$a" in aarch64|armv7|armhf|x86_64|x86) ;; *) err "不支持: $a"; return 1 ;; esac
-    local u="$(murl $m)/releases"; inf "镜像: $m"
+    local a="$1" v="$2" m="${3:-$(default_mirror)}"
+    [ -z "$a" ] || [ "$a" = "auto" ] && { a=$(arch) || return 1; inf "Arch: $a"; }
+    case "$a" in aarch64|armv7|armhf|x86_64|x86) ;; *) err "Unsupported: $a"; return 1 ;; esac
+    local u="$(murl $m)/releases"; inf "Mirror: $m"
     if [ -z "$v" ]; then
-        inf "检测版本..."
-        # 尝试多个镜像源检测版本（按优先级）
-        for mirror_url in "${u}/${a}/" \
-            "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/${a}/" \
-            "https://mirrors.ustc.edu.cn/alpine/latest-stable/releases/${a}/"; do
-            v=$(curl -sL "$mirror_url" 2>/dev/null | grep -o 'alpine-minirootfs-[0-9.]\+-'"${a}"'.tar.gz' | tail -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
-            [ -n "$v" ] && break
+        inf "Detecting version..."
+        # Try direct file existence check for known major versions (more reliable than dir listing)
+        for major in 3.24 3.23 3.22 3.21 3.20; do
+            for mirror_base in "https://dl-cdn.alpinelinux.org/alpine/v${major}/releases/${a}/" \
+                               "https://mirrors.ustc.edu.cn/alpine/v${major}/releases/${a}/" \
+                               "https://mirrors.tuna.tsinghua.edu.cn/alpine/v${major}/releases/${a}/"; do
+                test_url="${mirror_base}alpine-minirootfs-${major}.0-${a}.tar.gz"
+                if curl -sL -I "$test_url" 2>/dev/null | grep -q "200 OK"; then
+                    # Found major version, now detect exact patch version
+                    v=$(curl -sL "${mirror_base}" 2>/dev/null | grep -o "alpine-minirootfs-${major}\.[0-9]\+-${a}\.tar\.gz" | tail -1 | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+")
+                    [ -n "$v" ] && break 2
+                fi
+            done
         done
+        # Fallback: try latest-stable directory listing (may not work on all mirrors)
         if [ -z "$v" ]; then
-            err "无法检测最新版本，请手动指定版本号"
-            inf "用法: alpine download $a <版本号> $m"
+            for mirror_url in "${u}/${a}/" \
+                "https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/${a}/" \
+                "https://mirrors.ustc.edu.cn/alpine/latest-stable/releases/${a}/"; do
+                v=$(curl -sL "$mirror_url" 2>/dev/null | grep -o 'alpine-minirootfs-[0-9.]\+-'${a}'.tar.gz' | tail -1 | grep -o '[0-9]\+\.[0-9]\+\.[0-9]\+')
+                [ -n "$v" ] && break
+            done
+        fi
+        if [ -z "$v" ]; then
+            err "Cannot detect latest version, please specify manually"
+            inf "Usage: alpine download $a <version> $m"
             return 1
         fi
-        inf "版本: $v"
+        inf "Version: $v"
     fi
     local f="alpine-minirootfs-${v}-${a}.tar.gz" d="/sdcard/Download"
     mkdir -p "$d" 2>/dev/null || { d="/data/local/tmp"; mkdir -p "$d" 2>/dev/null; }
     local p="${d}/${f}"
-    # 检查已有文件完整性（防止之前下载失败保存了HTML错误页面）
+    # Check existing file integrity (prevent HTML error page from failed download)
     if [ -f "$p" ]; then
         local sz
         sz=$(wc -c < "$p" 2>/dev/null)
         if [ -z "$sz" ] || [ "$sz" -lt 1048576 ]; then
-            wrn "文件可能损坏(${sz:-0}字节)，重新下载..."
+            wrn "File may be corrupted (${sz:-0} bytes), re-downloading..."
             rm -f "$p"
         else
-            inf "文件已存在"
+            inf "File exists"
         fi
     fi
-    # 下载（仅在文件不存在时）
+    # Download (only if file doesn't exist)
     if [ ! -f "$p" ]; then
-        inf "下载: ${u}/${a}/${f}"
+        inf "Downloading: ${u}/${a}/${f}"
         if ! wget -O "$p" "${u}/${a}/${f}" 2>&1; then
             rm -f "$p" 2>/dev/null
-            # 下载失败，尝试官方源回退
+            # Download failed, try official source fallback
             local fallback="https://dl-cdn.alpinelinux.org/alpine/latest-stable/releases/${a}/${f}"
-            inf "镜像下载失败，尝试官方源: ${fallback}"
+            inf "Mirror download failed, trying official: ${fallback}"
             curl -L -o "$p" "$fallback" 2>&1 || { rm -f "$p"; return 1; }
         fi
-        # 验证下载文件完整性
+        # Verify downloaded file integrity
         sz=$(wc -c < "$p" 2>/dev/null)
         if [ -z "$sz" ] || [ "$sz" -lt 1048576 ]; then
-            err "下载文件可能损坏(${sz:-0}字节)"
+            err "Downloaded file may be corrupted (${sz:-0} bytes)"
             rm -f "$p"
             return 1
         fi
@@ -251,98 +271,98 @@ alpine_download() {
 
 alpine_install() {
     local f="$1"
-    [ -z "$f" ] && { err "用法: alpine install <文件>"; return 1; }
-    [ ! -f "$f" ] && { err "文件不存在: $f"; return 1; }
-    inf "安装到: $RF"
-    [ -d "$RF" ] && [ "$(ls -A $RF 2>/dev/null)" ] && { wrn "备份旧 rootfs..."; mv "$RF" "$RF.bak"; }
-    mkdir -p "$RF"; inf "解压..."
+    [ -z "$f" ] && { err "Usage: alpine install <file>"; return 1; }
+    [ ! -f "$f" ] && { err "File not found: $f"; return 1; }
+    inf "Installing to: $RF"
+    [ -d "$RF" ] && [ "$(ls -A $RF 2>/dev/null)" ] && { wrn "Backing up old rootfs..."; mv "$RF" "$RF.bak"; }
+    mkdir -p "$RF"; inf "Extracting..."
     case "$f" in
         *.tar.gz|*.tgz) tar -xzf "$f" -C "$RF" ;;
         *.tar.xz) tar -xJf "$f" -C "$RF" ;;
         *.tar.bz2) tar -xjf "$f" -C "$RF" ;;
-        *) err "不支持格式"; rm -rf "$RF"; return 1 ;;
-    esac || { err "解压失败"; rm -rf "$RF"; return 1; }
-    [ ! -d "$RF/bin" ] && { err "结构错误"; rm -rf "$RF"; return 1; }
+        *) err "Unsupported format"; rm -rf "$RF"; return 1 ;;
+    esac || { err "Extract failed"; rm -rf "$RF"; return 1; }
+    [ ! -d "$RF/bin" ] && { err "Structure error"; rm -rf "$RF"; return 1; }
     mkdir -p "$RF/etc/apk" "$RF/root" "$RF/tmp" "$RF/var/run"
     chmod 1777 "$RF/tmp"
     chmod 700 "$RF/root"
     alpine_set_mirror tuna
-    inf "安装完成，运行: alpine start"
+    inf "Install complete, run: alpine start"
 }
 
 #=======================================
-# 镜像设置
+# Mirror Setting
 #=======================================
 alpine_set_mirror() {
-    [ ! -d "$RF" ] && { err "rootfs 未安装"; return 1; }
+    [ ! -d "$RF" ] && { err "rootfs not installed"; return 1; }
     local u=$(murl "$1"); mkdir -p "$RF/etc/apk"
     echo -e "${u}/main\n${u}/community" > "$RF/etc/apk/repositories"
-    inf "镜像: $1"
+    inf "Mirror: $1"
 }
 
 #=======================================
-# 包管理器镜像配置
+# Package Manager Mirror Config
 #=======================================
 setup_npm_mirror() {
     if ! alpine_exec "command -v npm >/dev/null 2>&1"; then
-        inf "安装 npm..."
+        inf "Installing npm..."
         alpine_exec "apk add npm" 2>/dev/null || return
     fi
-    inf "配置 npm 国内镜像..."
+    inf "Configuring npm domestic mirror..."
     alpine_exec "npm config set registry https://registry.npmmirror.com" 2>/dev/null
-    inf "npm 镜像: npmmirror.com"
+    inf "npm mirror: npmmirror.com"
 }
 
 setup_pip_mirror() {
     alpine_exec "command -v pip3 >/dev/null 2>&1" && {
-        inf "配置 pip 国内镜像..."
+        inf "Configuring pip domestic mirror..."
         alpine_exec "mkdir -p /root && cat > /root/pip.conf << 'EOF'
 [global]
 index-url = https://pypi.tuna.tsinghua.edu.cn/simple
 trusted-host = pypi.tuna.tsinghua.edu.cn
 EOF
 pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple" 2>/dev/null
-        inf "pip 镜像: pypi.tuna.tsinghua.edu.cn"
+        inf "pip mirror: pypi.tuna.tsinghua.edu.cn"
         return
     }
-    # pip 不存在，安装 py3-pip 后配置镜像
-    inf "安装 pip..."
+    # pip doesn't exist, install py3-pip then configure mirror
+    inf "Installing pip..."
     alpine_exec "apk add py3-pip" 2>/dev/null || return
-    inf "配置 pip 国内镜像..."
+    inf "Configuring pip domestic mirror..."
     alpine_exec "mkdir -p /root && cat > /root/pip.conf << 'EOF'
 [global]
 index-url = https://pypi.tuna.tsinghua.edu.cn/simple
 trusted-host = pypi.tuna.tsinghua.edu.cn
 EOF
 pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple" 2>/dev/null
-    inf "pip 镜像: pypi.tuna.tsinghua.edu.cn"
+    inf "pip mirror: pypi.tuna.tsinghua.edu.cn"
 }
 
 #=======================================
-# OpenClaw 环境配置
+# OpenClaw Environment Config
 #=======================================
 setup_openclaw() {
     alpine_exec "command -v openclaw >/dev/null 2>&1" || return
-    inf "配置 OpenClaw 环境..."
-    # 安装 bash（OpenClaw exec 依赖）
+    inf "Configuring OpenClaw environment..."
+    # Install bash (OpenClaw exec depends on it)
     alpine_exec "command -v bash >/dev/null 2>&1 || apk add bash" 2>/dev/null
-    # 设置 SHELL 环境变量
+    # Set SHELL environment variable
     alpine_exec "grep -q 'SHELL=' /etc/profile 2>/dev/null || echo 'export SHELL=/bin/bash' >> /etc/profile" 2>/dev/null
     alpine_exec "grep -q 'SHELL=' /root/.bashrc 2>/dev/null || echo 'export SHELL=/bin/bash' >> /root/.bashrc" 2>/dev/null
-    # 配置 exec 权限（合并到已有配置，不覆盖）
+    # Configure exec permissions (merge with existing config, don't overwrite)
     alpine_exec "mkdir -p /root/.openclaw"
     local cfg="$RF/root/.openclaw/openclaw.json"
     if [ -f "$cfg" ]; then
-        # 已有配置，添加 exec 权限
+        # Config exists, add exec permission
         if grep -q '"exec"' "$cfg" 2>/dev/null; then
-            # 已有 exec 配置，修改 security 为 allow
+            # exec config exists, change security to allow
             sed -i 's/"security"[[:space:]]*:[[:space:]]*"[^"]*"/"security": "full"/' "$cfg" 2>/dev/null
         else
-            # 没有 exec 配置，在 tools 块中添加
+            # No exec config, add to tools block
             sed -i 's/"tools"[[:space:]]*:[[:space:]]*{/"tools": {"exec": {"security": "full"},/' "$cfg" 2>/dev/null
         fi
     else
-        # 没有配置文件，创建默认配置
+        # No config file, create default
         cat > "$cfg" << 'CONF'
 {
   "tools": {
@@ -353,14 +373,14 @@ setup_openclaw() {
 }
 CONF
     fi
-    inf "OpenClaw 环境配置完成"
+    inf "OpenClaw environment configured"
 }
 
 #=======================================
-# 软件安装
+# Package Installation
 #=======================================
 alpine_install_packages() {
-    run || { wrn "启动中..."; alpine_start || return 1; }
+    run || { wrn "Starting..."; alpine_start || return 1; }
     local p; case "$1" in
         ""|basic) p="bash coreutils vim curl wget" ;;
         dev) p="bash vim curl git python3 nodejs gcc" ;;
@@ -369,19 +389,18 @@ alpine_install_packages() {
         all) p="bash vim curl git python3 nodejs gcc openssh htop tree rsync" ;;
         *) p="$1" ;;
     esac
-    inf "安装: $p"; alpine_exec "apk update && apk add $p" || { err "失败"; return 1; }
-    # 检测 nodejs/python3，配置包管理器国内镜像
-    case " $p " in
-        *" nodejs "*) setup_npm_mirror ;;
+    inf "Installing: $p"
+    alpine_exec "apk add $p" || { err "Install failed"; return 1; }
+    case "$1" in
+        dev|net|all|*python*) setup_pip_mirror ;;
+        dev|all|*node*) setup_npm_mirror ;;
+        *openclaw*) setup_openclaw ;;
     esac
-    case " $p " in
-        *" python3 "*) setup_pip_mirror ;;
-    esac
-    inf "完成"
+    inf "Done"
 }
 
 #=======================================
-# 预设应用
+# Preset Apps
 #=======================================
 preset() {
     case "$1" in
@@ -397,18 +416,18 @@ preset() {
 }
 
 #=======================================
-# 服务管理（修复：命令注入风险、子shell问题、服务停止）
+# Service Management (Fixed: Command injection, subshell issues, service stop)
 #=======================================
 alpine_service() {
     local cmd="$1" name="$2" arg="$3"
     mkdir -p "$SVC"
-    # 修复：服务名称校验，防止命令注入
+    # Fix: Service name validation, prevent command injection
     case "$name" in
-        *[!a-zA-Z0-9_-]*) err "服务名只能包含字母、数字、下划线和连字符"; return 1 ;;
+        *[!a-zA-Z0-9_-]*) err "Service name only allows letters, numbers, underscore, hyphen"; return 1 ;;
     esac
     case "$cmd" in
         add)
-            [ -z "$name" ] && { err "用法: alpine service add <名称> [命令]"; return 1; }
+            [ -z "$name" ] && { err "Usage: alpine service add <name> [command]"; return 1; }
             local c="${arg:-$(preset $name)}"
             [ "$c" = "openclaw gateway" ] && c="openclaw gateway --port 18789"
             cat > "$SVC/$name.service" << EOF
@@ -419,10 +438,10 @@ Description=$name
 ExecStart=$c
 EOF
             touch "$SVC/$name.enabled"
-            inf "已添加: $name ($c)"
+            inf "Added: $name ($c)"
             ;;
         list)
-            echo "服务列表:"
+            echo "Service list:"
             ls "$SVC"/*.service 2>/dev/null | while read f; do
                 [ -f "$f" ] || continue
                 local n=$(basename "$f" .service)
@@ -430,36 +449,39 @@ EOF
             done
             ;;
         start)
-            [ -f "$SVC/$name.service" ] || { err "服务不存在: $name"; return 1; }
+            [ -f "$SVC/$name.service" ] || { err "Service not found: $name"; return 1; }
             run || alpine_start
-            # OpenClaw 启动前自动配置环境
+            # Auto-configure OpenClaw env before start
             [ "$name" = "openclaw" ] && setup_openclaw
             local c=$(grep "^ExecStart=" "$SVC/$name.service" | cut -d= -f2-)
-            inf "启动: $name"
-            # 记录服务 PID
+            inf "Starting: $name"
+            # Record service PID
             alpine_exec "nohup $c > /var/log/$name.log 2>&1 & echo \$! > /var/run/$name.pid"
             ;;
         stop)
-            inf "停止: $name"
-            # 修复：使用 PID 文件精确停止
+            inf "Stopping: $name"
+            # Fix: Use PID file for precise stop
             alpine_exec "if [ -f /var/run/$name.pid ]; then kill \$(cat /var/run/$name.pid) 2>/dev/null; rm -f /var/run/$name.pid; else pkill -f '$name'; fi" 2>/dev/null
             ;;
         restart) alpine_service stop "$name"; sleep 1; alpine_service start "$name" ;;
-        status) alpine_exec "pgrep -f '$name'" >/dev/null 2>&1 && echo -e "$name: ${Gr}运行中${Nc}" || echo -e "$name: ${Rd}未运行${Nc}" ;;
-        enable) [ -f "$SVC/$name.service" ] && { touch "$SVC/$name.enabled"; inf "已启用: $name"; } ;;
-        disable) rm -f "$SVC/$name.enabled"; inf "已禁用: $name" ;;
+        status) alpine_exec "pgrep -f '$name'" >/dev/null 2>&1 && echo -e "$name: ${Gr}Running${Nc}" || echo -e "$name: ${Rd}Stopped${Nc}" ;;
+        enable) [ -f "$SVC/$name.service" ] && { touch "$SVC/$name.enabled"; inf "Enabled: $name"; } ;;
+        disable) rm -f "$SVC/$name.enabled"; inf "Disabled: $name" ;;
         logs) alpine_exec "tail -50 /var/log/$name.log" ;;
-        rm) rm -f "$SVC/$name.service" "$SVC/$name.enabled"; inf "已删除: $name" ;;
-        *) echo "用法: alpine service <add|list|start|stop|restart|status|enable|disable|logs|rm>"; echo "预设: openclaw, sshd, nginx, redis, mysql, postgres" ;;
+        rm) rm -f "$SVC/$name.service" "$SVC/$name.enabled"; inf "Removed: $name" ;;
+        *) echo "Usage: alpine service <add|list|start|stop|restart|status|enable|disable|logs|rm>"; echo "Presets: openclaw, sshd, nginx, redis, mysql, postgres" ;;
     esac
 }
 
 #=======================================
 # 启动已启用服务（修复：避免管道子shell）
 #=======================================
+#=======================================
+# Start Enabled Services (Fixed: Avoid pipe subshell)
+#=======================================
 alpine_service_start_all() {
     [ ! -d "$SVC" ] && return
-    # 修复：使用 for 循环替代管道
+    # Fix: Use for loop instead of pipe
     for f in "$SVC"/*.enabled; do
         [ -f "$f" ] || continue
         alpine_service start "$(basename "$f" .enabled)" 2>/dev/null
@@ -467,25 +489,25 @@ alpine_service_start_all() {
 }
 
 #=======================================
-# Shell（修复：使用公共环境变量）
+# Shell (Fixed: Use common env vars)
 #=======================================
 alpine_shell() {
-    run || { wrn "启动中..."; alpine_start || return 1; }
+    run || { wrn "Starting..."; alpine_start || return 1; }
     local s="/bin/sh"; [ -x "$RF/bin/bash" ] && s="/bin/bash"
-    inf "进入 shell"
+    inf "Entering shell"
     chroot "$RF" /bin/sh -c "export $CHROOT_ENV; cd /root; exec $s -l"
 }
 
 #=======================================
-# SSH 配置/管理（保持原有逻辑不变）
+# SSH Config/Management (Keep original logic)
 #=======================================
 alpine_ssh() {
-    run || { err "未运行"; return 1; }
+    run || { err "Not running"; return 1; }
     case "$1" in
         setup|"")
             local p="${2:-22}" pw="${3:-123456}" pr="${4:-yes}"
             run || alpine_start
-            inf "安装 OpenSSH..."; alpine_exec "apk update && apk add openssh openssh-server" || return 1
+            inf "Installing OpenSSH..."; alpine_exec "apk update && apk add openssh openssh-server" || return 1
             alpine_exec "ssh-keygen -A" 2>/dev/null
             cat > "$RF/etc/ssh/sshd_config" << EOF
 Port $p
@@ -496,73 +518,73 @@ UseDNS no
 EOF
             echo "root:$pw" | chroot "$RF" /usr/sbin/chpasswd 2>/dev/null
             alpine_exec "/usr/sbin/sshd" 2>/dev/null
-            echo "========================================"; echo " SSH 配置完成"; echo "========================================"
-            echo "端口: $p"; echo "用户: root"; echo "密码: $pw"; echo "========================================"
+            echo "========================================"; echo " SSH Configured"; echo "========================================"
+            echo "Port: $p"; echo "User: root"; echo "Password: $pw"; echo "========================================"
             ;;
-        start) alpine_exec "/usr/sbin/sshd" && inf "已启动" ;;
-        stop) alpine_exec "pkill sshd" && inf "已停止" ;;
-        restart) alpine_exec "pkill sshd; sleep 1; /usr/sbin/sshd" && inf "已重启" ;;
-        status) alpine_exec "pgrep sshd" >/dev/null 2>&1 && echo -e "SSH: ${Gr}运行中${Nc}" || echo -e "SSH: ${Rd}未运行${Nc}" ;;
+        start) alpine_exec "/usr/sbin/sshd" && inf "Started" ;;
+        stop) alpine_exec "pkill sshd" && inf "Stopped" ;;
+        restart) alpine_exec "pkill sshd; sleep 1; /usr/sbin/sshd" && inf "Restarted" ;;
+        status) alpine_exec "pgrep sshd" >/dev/null 2>&1 && echo -e "SSH: ${Gr}Running${Nc}" || echo -e "SSH: ${Rd}Stopped${Nc}" ;;
     esac
 }
 
-# 兼容旧函数名
+# Legacy function compatibility
 alpine_setup_ssh() { alpine_ssh setup "$@"; }
 alpine_ssh_manage() { alpine_ssh "$@"; }
 
 #=======================================
-# GitHub 下载加速（多源回退）
+# GitHub Download Acceleration (Multi-source Fallback)
 #=======================================
-# Gitee 配置（用户可通过环境变量覆盖）
+# Gitee Config (User can override via env vars)
 GITEE_USER="${GITEE_USER:-}"
 GITEE_TOKEN="${GITEE_TOKEN:-}"
 
 gh_download_repo() {
     local owner="$1" repo="$2" dest="$3"
 
-    inf "下载 ${owner}/${repo} ..."
+    inf "Downloading ${owner}/${repo} ..."
 
-    # 确保 git 已安装
+    # Ensure git is installed
     alpine_exec "command -v git >/dev/null 2>&1 || apk add git" 2>/dev/null
 
-    # 1. 用户配置了 Gitee，尝试从用户仓库克隆
+    # 1. User configured Gitee, try clone from user repo
     if [ -n "$GITEE_USER" ]; then
         local user_gitee_url="https://gitee.com/${GITEE_USER}/${repo}.git"
-        inf "尝试 Gitee 用户镜像 (${GITEE_USER}) ..."
+        inf "Trying Gitee user mirror (${GITEE_USER}) ..."
         if alpine_exec "git clone --depth 1 '${user_gitee_url}' '${dest}'" 2>/dev/null; then
-            inf "Gitee 用户镜像下载成功"
+            inf "Gitee user mirror download success"
             return 0
         fi
         alpine_exec "rm -rf '${dest}'" 2>/dev/null
     fi
 
-    # 2. 询问是否配置 Gitee（仅当未配置时）
+    # 2. Ask to configure Gitee (only if not configured)
     if [ -z "$GITEE_USER" ] || [ -z "$GITEE_TOKEN" ]; then
         echo ""
-        echo "GitHub 下载可能较慢，配置 Gitee 可加速下载"
-        printf "是否配置 Gitee？[Y/n] "
+        echo "GitHub download may be slow, configure Gitee to accelerate"
+        printf "Configure Gitee? [Y/n] "
         local answer
         read -r answer 2>/dev/null || answer=""
         case "$answer" in
             n|N|no|NO) ;;
             *)
-                printf "请输入 Gitee 用户名: "
+                printf "Enter Gitee username: "
                 read -r GITEE_USER 2>/dev/null
-                printf "请输入 Gitee 私人令牌: "
+                printf "Enter Gitee personal token: "
                 read -r GITEE_TOKEN 2>/dev/null
                 if [ -z "$GITEE_USER" ] || [ -z "$GITEE_TOKEN" ]; then
-                    wrn "输入为空，跳过 Gitee 配置"
+                    wrn "Empty input, skipping Gitee config"
                 else
-                    inf "Gitee 配置: $GITEE_USER"
+                    inf "Gitee config: $GITEE_USER"
                 fi
                 ;;
         esac
     fi
 
-    # 3. 配置了 Gitee，自动创建镜像仓库并同步
+    # 3. Gitee configured, auto-create mirror repo and sync
     if [ -n "$GITEE_USER" ] && [ -n "$GITEE_TOKEN" ]; then
-        inf "尝试在 Gitee 创建镜像 ..."
-        # 创建 Gitee 仓库（带 import_url 自动从 GitHub 导入）
+        inf "Trying to create Gitee mirror ..."
+        # Create Gitee repo (with import_url to auto-import from GitHub)
         local create_result
         create_result=$(curl -s -X POST "https://gitee.com/api/v5/user/repos" \
             -d "access_token=${GITEE_TOKEN}" \
@@ -571,129 +593,130 @@ gh_download_repo() {
             -d "auto_init=false" \
             -d "import_url=https://github.com/${owner}/${repo}.git" 2>/dev/null)
         if echo "$create_result" | grep -q '"id"'; then
-            inf "正在从 GitHub 导入到 Gitee，等待同步..."
+            inf "Importing from GitHub to Gitee, waiting for sync..."
             local i=0
             while [ $i -lt 24 ]; do
                 sleep 5
-                inf "等待同步... ($((i*5))秒)"
+                inf "Waiting for sync... ($((i*5))s)"
                 local user_gitee_url="https://gitee.com/${GITEE_USER}/${repo}.git"
                 if alpine_exec "git clone --depth 1 '${user_gitee_url}' '${dest}'" 2>/dev/null; then
-                    inf "Gitee 镜像下载成功"
+                    inf "Gitee mirror download success"
                     return 0
                 fi
                 alpine_exec "rm -rf '${dest}'" 2>/dev/null
                 i=$((i+1))
             done
-            wrn "Gitee 导入超时，回退到 GitHub"
+            wrn "Gitee import timeout, falling back to GitHub"
         else
-            wrn "Gitee 创建仓库失败，回退到 GitHub"
+            wrn "Gitee repo creation failed, falling back to GitHub"
         fi
     fi
 
-    # 4. GitHub codeload 下载压缩包
-    inf "尝试 GitHub codeload ..."
+    # 4. GitHub codeload download zip
+    inf "Trying GitHub codeload ..."
     alpine_exec "mkdir -p /tmp/gh-dl" 2>/dev/null
     local gh_url="https://codeload.github.com/${owner}/${repo}/zip/refs/heads/main"
     if alpine_exec "wget -q -O /tmp/gh-dl/repo.zip '${gh_url}' 2>/dev/null || curl -sL -o /tmp/gh-dl/repo.zip '${gh_url}'"; then
         if alpine_exec "mkdir -p '${dest}' && cd /tmp/gh-dl && unzip -q -o repo.zip -d extracted 2>/dev/null && cp -r extracted/*/* '${dest}'/ 2>/dev/null || cp -r extracted/* '${dest}'/ 2>/dev/null"; then
             alpine_exec "rm -rf /tmp/gh-dl"
-            inf "GitHub 下载成功"
+            inf "GitHub download success"
             return 0
         fi
     fi
     alpine_exec "rm -rf /tmp/gh-dl" 2>/dev/null
 
-    # 5. 最后回退：git clone
-    inf "尝试 git clone ..."
-    alpine_exec "git clone --depth 1 https://github.com/${owner}/${repo}.git '${dest}'" || { alpine_exec "rm -rf '${dest}'" 2>/dev/null; err "下载失败，请检查网络"; return 1; }
+    # 5. Final fallback: git clone
+    inf "Trying git clone ..."
+    alpine_exec "git clone --depth 1 https://github.com/${owner}/${repo}.git '${dest}'" || { alpine_exec "rm -rf '${dest}'" 2>/dev/null; err "Download failed, check network"; return 1; }
 }
 
 #=======================================
-# Hermes Agent 一键安装
+# Hermes Agent One-Click Install
 #=======================================
 alpine_install_hermes() {
-    run || { wrn "启动中..."; alpine_start || return 1; }
+    run || { wrn "Starting..."; alpine_start || return 1; }
     inf "========================================"
-    inf " Hermes Agent 一键安装"
+    inf " Hermes Agent One-Click Install"
     inf "========================================"
 
-    # 1. 安装系统依赖
-    inf "安装系统依赖..."
-    alpine_exec "apk update && apk add python3 py3-pip python3-dev gcc g++ musl-dev libffi-dev olm-dev py3-olm make cmake samurai pkgconf git nodejs npm ripgrep" || { err "系统依赖安装失败"; return 1; }
+    # 1. Install system dependencies
+    inf "Installing system deps..."
+    alpine_exec "apk update && apk add python3 py3-pip python3-dev gcc g++ musl-dev libffi-dev olm-dev py3-olm make cmake samurai pkgconf git nodejs npm ripgrep" || { err "System deps install failed"; return 1; }
 
-    # 2. 配置包管理器国内镜像
+    # 2. Configure package manager domestic mirrors
     setup_npm_mirror
     setup_pip_mirror
 
-    # 3. 下载 Hermes Agent 源码
-    inf "下载 Hermes Agent 源码..."
+    # 3. Download Hermes Agent source
+    inf "Downloading Hermes Agent source..."
     if alpine_exec "[ -d /root/.hermes/hermes-agent ]"; then
-        inf "已有安装，更新中..."
+        inf "Existing install, updating..."
         alpine_exec "cd /root/.hermes/hermes-agent && git pull --ff-only 2>/dev/null || true"
     else
-        gh_download_repo "NousResearch" "hermes-agent" "/root/.hermes/hermes-agent" || { err "下载失败，请检查网络"; return 1; }
+        gh_download_repo "NousResearch" "hermes-agent" "/root/.hermes/hermes-agent" || { err "Download failed, check network"; return 1; }
     fi
 
-    # 4. 创建虚拟环境
-    inf "创建 Python 虚拟环境..."
-    alpine_exec "cd /root/.hermes/hermes-agent && python3 -m venv venv --system-site-packages" || { err "创建虚拟环境失败"; return 1; }
+    # 4. Create virtual environment
+    inf "Creating Python venv..."
+    alpine_exec "cd /root/.hermes/hermes-agent && python3 -m venv venv --system-site-packages" || { err "Venv creation failed"; return 1; }
 
-    # 5. 安装 Python 依赖
-    inf "安装 Python 依赖（可能需要几分钟）..."
+    # 5. Install Python deps
+    inf "Installing Python deps (may take a few minutes)..."
     alpine_exec "cd /root/.hermes/hermes-agent && ./venv/bin/pip install --upgrade pip setuptools wheel"
     alpine_exec "cd /root/.hermes/hermes-agent && ./venv/bin/pip install -e '.[all]'" || {
-        wrn "完整安装失败，尝试基础安装..."
-        alpine_exec "cd /root/.hermes/hermes-agent && ./venv/bin/pip install -e '.'" || { err "依赖安装失败"; return 1; }
+        wrn "Full install failed, trying basic..."
+        alpine_exec "cd /root/.hermes/hermes-agent && ./venv/bin/pip install -e '.'" || { err "Deps install failed"; return 1; }
     }
 
-    # 6. 安装 Node.js 依赖（浏览器工具，可选）
-    inf "安装 Node.js 依赖..."
+    # 6. Install Node.js deps (browser tools, optional)
+    inf "Installing Node.js deps..."
     alpine_exec "cd /root/.hermes/hermes-agent && npm install" 2>/dev/null || {
-        wrn "Node.js 原生模块编译失败，尝试跳过编译安装..."
-        alpine_exec "cd /root/.hermes/hermes-agent && npm install --ignore-scripts" 2>/dev/null || wrn "Node.js 依赖安装失败（不影响核心功能）"
+        wrn "Node.js native module build failed, trying skip scripts..."
+        alpine_exec "cd /root/.hermes/hermes-agent && npm install --ignore-scripts" 2>/dev/null || wrn "Node.js deps failed (core functionality unaffected)"
     }
 
-    # 7. 配置 PATH 和命令链接
-    inf "配置命令..."
-    alpine_exec "ln -sf /root/.hermes/hermes-agent/venv/bin/hermes /usr/local/bin/hermes" 2>/dev/null
-    alpine_exec "touch /root/.bashrc && grep -q '.hermes' /root/.bashrc || echo 'export PATH=/root/.hermes/hermes-agent/venv/bin:\$PATH' >> /root/.bashrc"
+    # 7. Configure PATH and command link
+    # 7. Configure PATH and command link
+        inf "Configuring command..."
+        alpine_exec "ln -sf /root/.hermes/hermes-agent/venv/bin/hermes /usr/local/bin/hermes" 2>/dev/null
+        alpine_exec "touch /root/.bashrc && grep -q '.hermes' /root/.bashrc || echo 'export PATH=/root/.hermes/hermes-agent/venv/bin:\\$PATH' >> /root/.bashrc"
 
-    # 8. 初始化配置目录
-    inf "初始化配置..."
-    alpine_exec "mkdir -p /root/.hermes/{cron,sessions,logs,pairing,hooks,image_cache,audio_cache,memories,skills}"
-    alpine_exec "[ -f /root/.hermes/.env ] || touch /root/.hermes/.env"
-    alpine_exec "[ -f /root/.hermes/config.yaml ] || touch /root/.hermes/config.yaml"
+        # 8. Initialize config directory
+        inf "Initializing config..."
+        alpine_exec "mkdir -p /root/.hermes/{cron,sessions,logs,pairing,hooks,image_cache,audio_cache,memories,skills}"
+        alpine_exec "[ -f /root/.hermes/.env ] || touch /root/.hermes/.env"
+        alpine_exec "[ -f /root/.hermes/config.yaml ] || touch /root/.hermes/config.yaml"
 
-    inf "========================================"
-    inf " Hermes Agent 安装完成！"
-    inf "========================================"
-    inf "使用方法:"
-    inf "  hermes setup    - 配置 API 密钥"
-    inf "  hermes          - 开始对话"
-    inf "  hermes gateway  - 启动网关服务"
-    inf ""
-    inf "配置文件:"
-    inf "  /root/.hermes/.env        - API 密钥"
-    inf "  /root/.hermes/config.yaml - 配置文件"
-    inf "========================================"
-}
+        inf "========================================"
+        inf " Hermes Agent Install Complete!"
+        inf "========================================"
+        inf "Usage:"
+        inf "  hermes setup    - Configure API keys"
+        inf "  hermes          - Start chat"
+        inf "  hermes gateway  - Start gateway service"
+        inf ""
+        inf "Config files:"
+        inf "  /root/.hermes/.env        - API keys"
+        inf "  /root/.hermes/config.yaml - Config file"
+        inf "========================================"
+    }
 
-#=======================================
-# 模块更新
-#=======================================
-alpine_update() {
-    local z="${1:-/sdcard/Download/alpine-linux.zip}"
-    [ ! -f "$z" ] && { err "文件不存在: $z"; return 1; }
-    local t="/data/local/tmp/alpine-update"; rm -rf "$t"; mkdir -p "$t"
-    inf "解压..."; unzip -o "$z" -d "$t" >/dev/null 2>&1 || { rm -rf "$t"; return 1; }
-    [ -f "$t/common.sh" ] || { err "格式错误"; rm -rf "$t"; return 1; }
-    inf "更新..."
-    cp -f "$t/"*.sh "$t/module.prop" /data/adb/modules/alpine_linux/ 2>/dev/null
-    cp -f "$t/system/bin/"* /data/adb/modules/alpine_linux/system/bin/ 2>/dev/null
-    chmod +x /data/adb/modules/alpine_linux/*.sh /data/adb/modules/alpine_linux/system/bin/*
-    rm -rf "$t"; inf "完成，请重启"
-}
+    #=======================================
+    # Module Update
+    #=======================================
+    alpine_update() {
+        local z="${1:-/sdcard/Download/alpine-linux.zip}"
+        [ ! -f "$z" ] && { err "File not found: $z"; return 1; }
+        local t="/data/local/tmp/alpine-update"; rm -rf "$t"; mkdir -p "$t"
+        inf "Extracting..."; unzip -o "$z" -d "$t" >/dev/null 2>&1 || { rm -rf "$t"; return 1; }
+        [ -f "$t/common.sh" ] || { err "Invalid format"; rm -rf "$t"; return 1; }
+        inf "Updating..."
+        cp -f "$t/"*.sh "$t/module.prop" /data/adb/modules/alpine_linux/ 2>/dev/null
+        cp -f "$t/system/bin/"* /data/adb/modules/alpine_linux/system/bin/ 2>/dev/null
+        chmod +x /data/adb/modules/alpine_linux/*.sh /data/adb/modules/alpine_linux/system/bin/*
+        rm -rf "$t"; inf "Done, please reboot"
+    }
 
-# 兼容旧函数名
-alpine_update_auto() { alpine_update; }
-alpine_update_local() { alpine_update "$1"; }
+    # Legacy function compatibility
+    alpine_update_auto() { alpine_update; }
+    alpine_update_local() { alpine_update "$1"; }
